@@ -185,6 +185,25 @@ function getNotifyEmails() {
   return [...emails]
 }
 
+function getNotifyFrom() {
+  const fromEnv = process.env.NOTIFY_EMAIL_FROM?.trim()
+  if (fromEnv) return fromEnv
+
+  const siteUrl = process.env.SITE_URL?.trim()
+  if (siteUrl) {
+    try {
+      const host = new URL(siteUrl).hostname.replace(/^www\./, '')
+      if (host && !host.includes('vercel.app')) {
+        return `PilotPay <onboarding@${host}>`
+      }
+    } catch {
+      /* ignore invalid SITE_URL */
+    }
+  }
+
+  return 'PilotPay <onboarding@pilotpay.online>'
+}
+
 async function sendEmail(data: ApplicationNotification) {
   const apiKey = process.env.RESEND_API_KEY?.trim()
   const to = getNotifyEmails()
@@ -193,7 +212,7 @@ async function sendEmail(data: ApplicationNotification) {
     return false
   }
 
-  const from = process.env.NOTIFY_EMAIL_FROM?.trim() || 'PilotPay <onboarding@resend.dev>'
+  const from = getNotifyFrom()
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -212,6 +231,7 @@ async function sendEmail(data: ApplicationNotification) {
 
   if (!res.ok) {
     const detail = await res.text()
+    console.error('Resend email failed:', { from, to, status: res.status, detail })
     throw new Error(`Resend API error (${res.status}): ${detail}`)
   }
 
@@ -259,6 +279,7 @@ export function notificationsConfigured() {
     telegramChats: getTelegramChatIds().length,
     email,
     emailRecipients: getNotifyEmails().length,
+    emailFrom: getNotifyFrom(),
     any: telegram || email,
   }
 }

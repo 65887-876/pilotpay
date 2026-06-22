@@ -1,13 +1,22 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Store, ArrowRight } from 'lucide-react'
 import { useInView } from '../hooks/useInView'
 import { useCounter } from '../hooks/useCounter'
 import { fadeUp, viewportOnce, ease } from '../lib/motion'
+import anastasiaPoster from '../assets/videos/posters/Anastasia UGC.jpg'
+import joshPoster from '../assets/videos/posters/Josh UGC.jpg'
+import patrickPoster from '../assets/videos/posters/Patrick UGC.jpg'
+
+const partnerAvatars = [joshPoster, patrickPoster, anastasiaPoster]
 
 export function HowItWorks() {
   const { ref, inView } = useInView()
   const cutPercent = useCounter(4, inView, 2000, 0)
   const volume = useCounter(12, inView, 2500, 0)
+  const [partnerAvatar] = useState(
+    () => partnerAvatars[Math.floor(Math.random() * partnerAvatars.length)],
+  )
 
   return (
     <section className="bg-surface py-24" ref={ref} id="about">
@@ -45,9 +54,11 @@ export function HowItWorks() {
                 </svg>
 
                 <div className="flex flex-1 flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center shadow-card">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-navy text-white">
-                    <span className="font-display text-sm font-semibold">PP</span>
-                  </span>
+                  <img
+                    src={partnerAvatar}
+                    alt=""
+                    className="h-12 w-12 rounded-2xl object-cover ring-2 ring-primary/15 shadow-card"
+                  />
                   <p className="text-sm font-semibold text-ink-soft">Your Stripe account</p>
                 </div>
               </div>
