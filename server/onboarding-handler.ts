@@ -65,19 +65,18 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
   const delivered = notifications.telegram || notifications.email
 
   if (!stored && !delivered) {
-    const { telegram, email } = notificationsConfigured()
-    const hints: string[] = []
-    if (!telegram) hints.push('TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_IDS')
-    if (!email) hints.push('RESEND_API_KEY')
+    console.error('Onboarding submit failed — not stored and notifications failed', {
+      stored,
+      configured: notificationsConfigured(),
+      notificationErrors: notifications.errors,
+    })
+
+    const contactEmail = process.env.NOTIFY_EMAIL?.trim() || 'boukharih262@gmail.com'
 
     return {
       status: 503 as const,
       body: {
-        message:
-          hints.length > 0
-            ? `Could not save or notify. Configure on Vercel: ${hints.join(', ')}`
-            : 'Could not save application or send notifications.',
-        errors: notifications.errors,
+        message: `We couldn't submit your application right now. Please try again in a few minutes, or email us at ${contactEmail}.`,
       },
     }
   }
