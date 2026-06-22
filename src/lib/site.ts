@@ -18,6 +18,7 @@ export const site = {
   phoneUs: import.meta.env.VITE_CONTACT_PHONE_US ?? '+1 833-437-3106',
   whatsapp: import.meta.env.VITE_WHATSAPP_URL ?? 'https://wa.me/447307299316',
   address: '19 Meridian N, Leicester LE19 1WD, United Kingdom',
+  companyName: 'PilotPay LTD',
   /** Defaults to /api/onboarding — proxied to Express in dev & production */
   applyEndpoint: import.meta.env.VITE_APPLY_ENDPOINT?.trim() || '/api/onboarding',
   ogImage: '/og.png',

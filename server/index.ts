@@ -26,23 +26,21 @@ const app = express()
 app.use(cors({ origin: isProd ? true : ['http://localhost:5173', 'http://127.0.0.1:5173'] }))
 app.use(express.json({ limit: '1mb' }))
 
-function authMiddleware(
+async function authMiddleware(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction,
 ) {
   const header = req.headers.authorization
   const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined
-  if (!validateSession(token)) {
+  if (!(await validateSession(token))) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }
   next()
 }
 
-// ── Public API ──────────────────────────────────────────────
-
-app.post('/api/onboarding', (req, res) => {
+app.post('/api/onboarding', async (req, res) => {
   const body = req.body ?? {}
 
   if (!body.fullName?.trim()) {
@@ -59,7 +57,7 @@ app.post('/api/onboarding', (req, res) => {
   }
 
   try {
-    const application = insertApplication({
+    const application = await insertApplication({
       fullName: body.fullName,
       phoneNumber: body.phoneNumber,
       phoneCountry: body.phoneCountry,
@@ -71,10 +69,7 @@ app.post('/api/onboarding', (req, res) => {
       onboardingPreference: 'manual',
     })
 
-    res.status(201).json({
-      ok: true,
-      id: application.id,
-    })
+    res.status(201).json({ ok: true, id: application.id })
   } catch (err) {
     console.error('Onboarding error:', err)
     res.status(500).json({ message: 'Failed to save application' })
@@ -85,7 +80,6 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'pilotpay-api' })
 })
 
-// Dynamic SEO (domain from env when purchased)
 app.get('/robots.txt', (_req, res) => {
   const base = SITE_URL || 'http://localhost:5173'
   res.type('text/plain').send(`User-agent: *\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`)
@@ -93,7 +87,16 @@ app.get('/robots.txt', (_req, res) => {
 
 app.get('/sitemap.xml', (_req, res) => {
   const base = SITE_URL || 'http://localhost:5173'
-  const urls = ['/', '/apply', '/legal/privacy', '/legal/terms', '/legal/cookies', '/legal/aml', '/legal/security', '/legal/partnership']
+  const urls = [
+    '/',
+    '/apply',
+    '/legal/privacy',
+    '/legal/terms',
+    '/legal/cookies',
+    '/legal/aml',
+    '/legal/security',
+    '/legal/partnership',
+  ]
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${base}${u}</loc></url>`).join('\n')}
@@ -101,21 +104,19 @@ ${urls.map((u) => `  <url><loc>${base}${u}</loc></url>`).join('\n')}
   res.type('application/xml').send(xml)
 })
 
-// ── Admin API ───────────────────────────────────────────────
-
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   const { password } = req.body ?? {}
   if (password !== ADMIN_PASSWORD) {
     res.status(401).json({ message: 'Invalid password' })
     return
   }
-  const session = createSession(48)
+  const session = await createSession(48)
   res.json({ token: session.token, expiresAt: session.expiresAt })
 })
 
-app.post('/api/admin/logout', authMiddleware, (req, res) => {
+app.post('/api/admin/logout', authMiddleware, async (req, res) => {
   const token = req.headers.authorization?.slice(7)
-  if (token) deleteSession(token)
+  if (token) await deleteSession(token)
   res.json({ ok: true })
 })
 
@@ -123,14 +124,14 @@ app.get('/api/admin/me', authMiddleware, (_req, res) => {
   res.json({ ok: true })
 })
 
-app.get('/api/admin/stats', authMiddleware, (_req, res) => {
-  res.json(getStats())
+app.get('/api/admin/stats', authMiddleware, async (_req, res) => {
+  res.json(await getStats())
 })
 
-app.get('/api/admin/applications', authMiddleware, (req, res) => {
+app.get('/api/admin/applications', authMiddleware, async (req, res) => {
   const status = typeof req.query.status === 'string' ? req.query.status : undefined
   const search = typeof req.query.search === 'string' ? req.query.search : undefined
-  const rows = listApplications({ status, search })
+  const rows = await listApplications({ status, search })
   res.json(
     rows.map((r) => ({
       ...r,
@@ -139,8 +140,8 @@ app.get('/api/admin/applications', authMiddleware, (req, res) => {
   )
 })
 
-app.get('/api/admin/applications/:id', authMiddleware, (req, res) => {
-  const row = getApplicationById(req.params.id)
+app.get('/api/admin/applications/:id', authMiddleware, async (req, res) => {
+  const row = await getApplicationById(req.params.id)
   if (!row) {
     res.status(404).json({ message: 'Not found' })
     return
@@ -148,7 +149,7 @@ app.get('/api/admin/applications/:id', authMiddleware, (req, res) => {
   res.json({ ...row, gateways: JSON.parse(row.gateways) as string[] })
 })
 
-app.patch('/api/admin/applications/:id', authMiddleware, (req, res) => {
+app.patch('/api/admin/applications/:id', authMiddleware, async (req, res) => {
   const { status, notes } = req.body ?? {}
   const validStatuses: ApplicationStatus[] = ['new', 'reviewing', 'approved', 'rejected', 'ineligible']
 
@@ -157,7 +158,7 @@ app.patch('/api/admin/applications/:id', authMiddleware, (req, res) => {
     return
   }
 
-  const updated = updateApplication(req.params.id, { status, notes })
+  const updated = await updateApplication(req.params.id, { status, notes })
   if (!updated) {
     res.status(404).json({ message: 'Not found' })
     return
@@ -166,11 +167,8 @@ app.patch('/api/admin/applications/:id', authMiddleware, (req, res) => {
   res.json({ ...updated, gateways: JSON.parse(updated.gateways) as string[] })
 })
 
-// ── Static files (production) ───────────────────────────────
-
 const distPath = join(__dirname, '..', 'dist')
 
-// SPA fallback (Express 5 compatible)
 if (existsSync(distPath)) {
   app.use(express.static(distPath))
   app.use((req, res, next) => {

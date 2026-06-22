@@ -1,65 +1,13 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
 import { randomUUID } from 'crypto'
+import {
+  readStore,
+  writeStore,
+  type ApplicationRow,
+  type ApplicationStatus,
+  type DbSchema,
+} from './store.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const dataDir = process.env.DATABASE_PATH
-  ? dirname(process.env.DATABASE_PATH)
-  : join(__dirname, '..', 'data')
-const dbFile = process.env.DATABASE_PATH ?? join(dataDir, 'pilotpay.json')
-
-if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true })
-
-export type ApplicationStatus = 'new' | 'reviewing' | 'approved' | 'rejected' | 'ineligible'
-
-export type ApplicationRow = {
-  id: string
-  full_name: string
-  phone_number: string | null
-  phone_country: string | null
-  telegram_username: string | null
-  email_address: string
-  gateways: string
-  total_processed: string | null
-  instant_payouts: string | null
-  legal_entity: string | null
-  onboarding_preference: string | null
-  status: ApplicationStatus
-  notes: string | null
-  created_at: string
-  updated_at: string
-  /** @deprecated legacy field */
-  whatsapp_number?: string | null
-}
-
-type SessionRow = {
-  token: string
-  created_at: string
-  expires_at: string
-}
-
-type DbSchema = {
-  applications: ApplicationRow[]
-  admin_sessions: SessionRow[]
-}
-
-function loadDb(): DbSchema {
-  if (!existsSync(dbFile)) {
-    return { applications: [], admin_sessions: [] }
-  }
-  try {
-    return JSON.parse(readFileSync(dbFile, 'utf-8')) as DbSchema
-  } catch {
-    return { applications: [], admin_sessions: [] }
-  }
-}
-
-function saveDb(db: DbSchema) {
-  const tmp = `${dbFile}.tmp`
-  writeFileSync(tmp, JSON.stringify(db, null, 2), 'utf-8')
-  renameSync(tmp, dbFile)
-}
+export type { ApplicationRow, ApplicationStatus } from './store.js'
 
 export type ApplicationInput = {
   fullName: string
@@ -73,8 +21,8 @@ export type ApplicationInput = {
   onboardingPreference?: string
 }
 
-export function insertApplication(input: ApplicationInput) {
-  const db = loadDb()
+export async function insertApplication(input: ApplicationInput) {
+  const db = await readStore()
   const id = randomUUID()
   const now = new Date().toISOString()
 
@@ -97,17 +45,17 @@ export function insertApplication(input: ApplicationInput) {
   }
 
   db.applications.unshift(row)
-  saveDb(db)
+  await writeStore(db)
   return row
 }
 
-export function getApplicationById(id: string) {
-  const db = loadDb()
+export async function getApplicationById(id: string) {
+  const db = await readStore()
   return db.applications.find((a) => a.id === id)
 }
 
-export function listApplications(filters?: { status?: string; search?: string }) {
-  let rows = loadDb().applications
+export async function listApplications(filters?: { status?: string; search?: string }) {
+  let rows = (await readStore()).applications
 
   if (filters?.status && filters.status !== 'all') {
     rows = rows.filter((r) => r.status === filters.status)
@@ -127,11 +75,11 @@ export function listApplications(filters?: { status?: string; search?: string })
   return rows.sort((a, b) => b.created_at.localeCompare(a.created_at))
 }
 
-export function updateApplication(
+export async function updateApplication(
   id: string,
   patch: { status?: ApplicationStatus; notes?: string },
 ) {
-  const db = loadDb()
+  const db = await readStore()
   const idx = db.applications.findIndex((a) => a.id === id)
   if (idx === -1) return null
 
@@ -145,12 +93,12 @@ export function updateApplication(
   }
 
   db.applications[idx] = updated
-  saveDb(db)
+  await writeStore(db)
   return updated
 }
 
-export function getStats() {
-  const rows = loadDb().applications
+export async function getStats() {
+  const rows = (await readStore()).applications
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const byStatus: Record<string, number> = {}
 
@@ -165,8 +113,8 @@ export function getStats() {
   }
 }
 
-export function createSession(expiresInHours = 24) {
-  const db = loadDb()
+export async function createSession(expiresInHours = 24) {
+  const db = await readStore()
   const token = randomUUID() + randomUUID().replace(/-/g, '')
   const now = new Date()
   const expires = new Date(now.getTime() + expiresInHours * 60 * 60 * 1000)
@@ -177,27 +125,26 @@ export function createSession(expiresInHours = 24) {
     expires_at: expires.toISOString(),
   })
 
-  // Purge expired
   db.admin_sessions = db.admin_sessions.filter((s) => new Date(s.expires_at) >= now)
 
-  saveDb(db)
+  await writeStore(db)
   return { token, expiresAt: expires.toISOString() }
 }
 
-export function validateSession(token: string | undefined) {
+export async function validateSession(token: string | undefined) {
   if (!token) return false
-  const db = loadDb()
+  const db = await readStore()
   const row = db.admin_sessions.find((s) => s.token === token)
   if (!row) return false
   if (new Date(row.expires_at) < new Date()) {
-    deleteSession(token)
+    await deleteSession(token)
     return false
   }
   return true
 }
 
-export function deleteSession(token: string) {
-  const db = loadDb()
+export async function deleteSession(token: string) {
+  const db = await readStore()
   db.admin_sessions = db.admin_sessions.filter((s) => s.token !== token)
-  saveDb(db)
+  await writeStore(db)
 }
