@@ -194,14 +194,14 @@ function getNotifyFrom() {
     try {
       const host = new URL(siteUrl).hostname.replace(/^www\./, '')
       if (host && !host.includes('vercel.app')) {
-        return `PilotPay <onboarding@${host}>`
+        return `onboarding@${host}`
       }
     } catch {
       /* ignore invalid SITE_URL */
     }
   }
 
-  return 'PilotPay <onboarding@pilotpay.online>'
+  return 'onboarding@pilotpay.online'
 }
 
 async function sendEmail(data: ApplicationNotification) {
