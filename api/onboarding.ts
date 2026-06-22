@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { insertApplication } from '../server/db.js'
-import { StorageError } from '../server/store.js'
 import { handleOptions, parseBody } from '../server/api-helpers.js'
+import { processOnboardingSubmit } from '../server/onboarding-handler.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return
@@ -13,41 +12,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = parseBody<Record<string, string>>(req)
 
-  if (!body.fullName?.trim()) {
-    res.status(400).json({ message: 'Full name is required' })
-    return
-  }
-  if (!body.emailAddress?.trim()) {
-    res.status(400).json({ message: 'Email is required' })
-    return
-  }
-  if (!body.phoneNumber?.trim()) {
-    res.status(400).json({ message: 'Phone number is required' })
-    return
-  }
-
   try {
-    const application = await insertApplication({
-      fullName: body.fullName,
-      phoneNumber: body.phoneNumber,
-      phoneCountry: body.phoneCountry,
-      telegramUsername: body.telegramUsername,
-      emailAddress: body.emailAddress,
-      totalProcessed: body.totalProcessed,
-      instantPayouts: body.instantPayouts,
-      legalEntity: body.legalEntity,
-      onboardingPreference: 'manual',
-    })
-
-    res.status(201).json({ ok: true, id: application.id })
+    const result = await processOnboardingSubmit(body)
+    res.status(result.status).json(result.body)
   } catch (err) {
     console.error('Onboarding error:', err)
-
-    if (err instanceof StorageError) {
-      res.status(503).json({ message: err.message })
-      return
-    }
-
     const message = err instanceof Error ? err.message : 'Failed to save application'
     res.status(500).json({ message })
   }

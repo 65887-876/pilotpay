@@ -4,7 +4,6 @@ import { existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import {
-  insertApplication,
   listApplications,
   getApplicationById,
   updateApplication,
@@ -14,6 +13,7 @@ import {
   deleteSession,
   type ApplicationStatus,
 } from './db.js'
+import { processOnboardingSubmit } from './onboarding-handler.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 3001
@@ -41,35 +41,9 @@ async function authMiddleware(
 }
 
 app.post('/api/onboarding', async (req, res) => {
-  const body = req.body ?? {}
-
-  if (!body.fullName?.trim()) {
-    res.status(400).json({ message: 'Full name is required' })
-    return
-  }
-  if (!body.emailAddress?.trim()) {
-    res.status(400).json({ message: 'Email is required' })
-    return
-  }
-  if (!body.phoneNumber?.trim()) {
-    res.status(400).json({ message: 'Phone number is required' })
-    return
-  }
-
   try {
-    const application = await insertApplication({
-      fullName: body.fullName,
-      phoneNumber: body.phoneNumber,
-      phoneCountry: body.phoneCountry,
-      telegramUsername: body.telegramUsername,
-      emailAddress: body.emailAddress,
-      totalProcessed: body.totalProcessed,
-      instantPayouts: body.instantPayouts,
-      legalEntity: body.legalEntity,
-      onboardingPreference: 'manual',
-    })
-
-    res.status(201).json({ ok: true, id: application.id })
+    const result = await processOnboardingSubmit(req.body ?? {})
+    res.status(result.status).json(result.body)
   } catch (err) {
     console.error('Onboarding error:', err)
     res.status(500).json({ message: 'Failed to save application' })
