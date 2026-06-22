@@ -110,11 +110,7 @@ export function Apply() {
       onboardingPreference: 'manual' as const,
     }
 
-    try {
-      await submitApplication(payload)
-    } catch (err) {
-      console.error('Application submit failed:', err)
-    }
+    void submitApplication(payload)
 
     setSubmitting(false)
     setScreen('success')
