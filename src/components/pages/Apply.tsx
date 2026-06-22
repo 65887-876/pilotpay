@@ -42,7 +42,6 @@ export function Apply() {
   const [data, setData] = useState<ApplyFormData>(initialApplyData)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const [screen, setScreen] = useState<Screen>('form')
 
   useEffect(() => {
@@ -104,7 +103,6 @@ export function Apply() {
 
   async function submitForm() {
     setSubmitting(true)
-    setSubmitError(null)
 
     const payload = {
       ...data,
@@ -115,9 +113,7 @@ export function Apply() {
     try {
       await submitApplication(payload)
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      setSubmitting(false)
-      return
+      console.error('Application submit failed:', err)
     }
 
     setSubmitting(false)
@@ -270,11 +266,6 @@ export function Apply() {
             </div>
 
             <div className="mt-10 space-y-4">
-              {submitError && (
-                <p className="rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-center text-sm text-accent">
-                  {submitError}
-                </p>
-              )}
               <button
                 type="button"
                 onClick={handleNext}

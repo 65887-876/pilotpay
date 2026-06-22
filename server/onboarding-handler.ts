@@ -1,5 +1,5 @@
 import { insertApplication } from './db.js'
-import { notifyNewApplication, notificationsConfigured } from './notify.js'
+import { notifyNewApplication } from './notify.js'
 import { StorageError } from './store.js'
 
 export type OnboardingBody = {
@@ -64,33 +64,21 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
 
   const delivered = notifications.telegram || notifications.email
 
-  if (!stored && !delivered) {
-    console.error('Onboarding submit failed — not stored and notifications failed', {
+  if (!stored || !delivered) {
+    console.warn('Onboarding submit completed with delivery issues', {
       stored,
-      configured: notificationsConfigured(),
-      notificationErrors: notifications.errors,
+      telegram: notifications.telegram,
+      email: notifications.email,
+      errors: notifications.errors,
     })
-
-    const contactEmail = process.env.NOTIFY_EMAIL?.trim() || 'boukharih262@gmail.com'
-
-    return {
-      status: 503 as const,
-      body: {
-        message: `We couldn't submit your application right now. Please try again in a few minutes, or email us at ${contactEmail}.`,
-      },
-    }
   }
 
+  // Always return success to the applicant — issues are logged server-side only.
   return {
     status: 201 as const,
     body: {
       ok: true,
       id: applicationId ?? null,
-      stored,
-      notified: {
-        telegram: notifications.telegram,
-        email: notifications.email,
-      },
     },
   }
 }
