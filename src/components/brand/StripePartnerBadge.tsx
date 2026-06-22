@@ -7,6 +7,7 @@ export function StripePartnerBadge({ className = '' }: { className?: string }) {
       aria-label="Stripe Verified Partner"
     >
       <StripeLogo />
+      <span className="h-3.5 w-px bg-white/20" aria-hidden />
       <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
         Verified Partner
       </span>
