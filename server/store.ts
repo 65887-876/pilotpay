@@ -66,12 +66,21 @@ function redisCredentials() {
     },
   ]
 
+  const urlSuffixes = [
+    { url: '_REST_API_URL', token: '_REST_API_TOKEN' },
+    { url: '_REST_URL', token: '_REST_TOKEN' },
+  ] as const
+
   // Supports Upstash installs that used a custom env prefix on Vercel
   for (const [key, url] of Object.entries(process.env)) {
-    if (!url || !key.endsWith('_REST_URL')) continue
-    const base = key.slice(0, -'_REST_URL'.length)
-    const token = process.env[`${base}_REST_TOKEN`]
-    if (token) pairs.push({ url, token })
+    if (!url) continue
+    for (const suffix of urlSuffixes) {
+      if (!key.endsWith(suffix.url)) continue
+      const base = key.slice(0, -suffix.url.length)
+      const token = process.env[`${base}${suffix.token}`]
+      if (token) pairs.push({ url, token })
+      break
+    }
   }
 
   for (const pair of pairs) {
