@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { getStorageStatus } from '../server/store.js'
 import { handleOptions } from '../server/api-helpers.js'
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
@@ -9,5 +10,12 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return
   }
 
-  res.json({ ok: true, service: 'pilotpay-api' })
+  const storage = getStorageStatus()
+
+  res.json({
+    ok: true,
+    service: 'pilotpay-api',
+    storage,
+    ready: storage.remote || !storage.vercel,
+  })
 }

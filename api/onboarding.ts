@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { insertApplication } from '../server/db.js'
+import { StorageError } from '../server/store.js'
 import { handleOptions, parseBody } from '../server/api-helpers.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -41,6 +42,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(201).json({ ok: true, id: application.id })
   } catch (err) {
     console.error('Onboarding error:', err)
-    res.status(500).json({ message: 'Failed to save application' })
+
+    if (err instanceof StorageError) {
+      res.status(503).json({ message: err.message })
+      return
+    }
+
+    const message = err instanceof Error ? err.message : 'Failed to save application'
+    res.status(500).json({ message })
   }
 }

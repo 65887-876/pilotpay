@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { validateSession } from './db.js'
 
 export function getBearer(req: VercelRequest) {
   const header = req.headers.authorization
@@ -7,6 +6,7 @@ export function getBearer(req: VercelRequest) {
 }
 
 export async function requireAuth(req: VercelRequest, res: VercelResponse) {
+  const { validateSession } = await import('./db.js')
   const token = getBearer(req)
   if (!(await validateSession(token))) {
     res.status(401).json({ message: 'Unauthorized' })
