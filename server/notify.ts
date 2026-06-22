@@ -165,9 +165,29 @@ async function sendTelegram(data: ApplicationNotification) {
   return true
 }
 
+function getNotifyEmails() {
+  const emails = new Set<string>()
+
+  const addFromList = (value?: string) => {
+    if (!value?.trim()) return
+    for (const part of value.split(/[,;\s]+/)) {
+      const email = part.trim().toLowerCase()
+      if (email && email.includes('@')) emails.add(email)
+    }
+  }
+
+  addFromList(process.env.NOTIFY_EMAILS)
+  addFromList(process.env.NOTIFY_EMAIL)
+  addFromList(process.env.NOTIFY_EMAIL_2)
+
+  if (emails.size === 0) emails.add('boukharih262@gmail.com')
+
+  return [...emails]
+}
+
 async function sendEmail(data: ApplicationNotification) {
   const apiKey = process.env.RESEND_API_KEY?.trim()
-  const to = process.env.NOTIFY_EMAIL?.trim() || 'boukharih262@gmail.com'
+  const to = getNotifyEmails()
 
   if (!apiKey) {
     return false
@@ -183,7 +203,7 @@ async function sendEmail(data: ApplicationNotification) {
     },
     body: JSON.stringify({
       from,
-      to: [to],
+      to,
       subject: `New PilotPay application — ${data.fullName}`,
       text: formatApplicationMessage(data),
       html: formatApplicationHtml(data),
@@ -238,6 +258,7 @@ export function notificationsConfigured() {
     telegram,
     telegramChats: getTelegramChatIds().length,
     email,
+    emailRecipients: getNotifyEmails().length,
     any: telegram || email,
   }
 }
