@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Mail, MapPin } from 'lucide-react'
 import { Logo } from './brand/Logo'
 import { StripePartnerBadge } from './brand/StripePartnerBadge'
+import { StripeLogo } from './brand/StripeLogo'
 import { homeSections, site } from '../lib/site'
 
 type FooterLink = { label: string; to: string }
@@ -49,17 +50,6 @@ function LinkColumn({ title, links }: { title: string; links: FooterLink[] }) {
         ))}
       </ul>
     </div>
-  )
-}
-
-function StripeWordmark({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 60 25" className={`h-[18px] w-auto ${className}`} aria-label="Stripe">
-      <path
-        fill="currentColor"
-        d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.04 1.26-.06 1.48zm-5.92-5.62c-1.03 0-2.17.73-2.17 2.58h4.25c0-1.85-1.07-2.58-2.08-2.58zM40.95 20.3c-1.44 0-2.32-.6-2.9-1.04l-.02 4.63-4.12.87V5.57h3.76l.08 1.02a4.7 4.7 0 0 1 3.23-1.29c2.9 0 5.62 2.6 5.62 7.4 0 5.23-2.7 7.6-5.65 7.6zM40 8.95c-.95 0-1.54.34-1.97.81l.02 6.12c.4.44.98.78 1.95.78 1.52 0 2.54-1.65 2.54-3.87 0-2.15-1.04-3.84-2.54-3.84zM28.24 5.57h4.13v14.44h-4.13V5.57zm0-4.7L32.37 0v3.36l-4.13.88V.87zm-5.32 7.03v.2h-.08c-.58-.87-1.64-1.54-3.02-1.54-2.87 0-5.27 2.54-5.27 7.42 0 4.82 2.4 7.56 5.27 7.56 1.38 0 2.44-.67 3.02-1.56h.08v.98c0 2.72-1.46 3.96-3.8 3.96a7.86 7.86 0 0 1-4.05-1.17l-.6 3.44c1.17.5 2.7.95 4.8.95 4.42 0 6.83-2.32 6.83-7.98V5.57h-3.76l-.1 1.03zm-3.86 9.7c-1.52 0-2.54-1.65-2.54-3.87 0-2.2 1.02-3.84 2.54-3.84 1.5 0 2.54 1.64 2.54 3.84 0 2.22-1.03 3.87-2.54 3.87zM5.5 5.57h3.9l.26 1.58c.6-.9 1.7-1.87 3.52-1.87 2.3 0 3.6 1.42 3.6 4.12v9.61H12.15v-8.9c0-1.28-.47-1.88-1.46-1.88-.88 0-1.4.6-1.76 1.17v9.61H5.5V5.57z"
-      />
-    </svg>
   )
 }
 
@@ -136,8 +126,8 @@ export function Footer() {
                 <p>United Kingdom</p>
               </div>
             </div>
-            <div className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-white/70">
-              <StripeWordmark />
+            <div className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-4 py-2">
+              <StripeLogo className="h-[18px] w-[3rem]" color="#ffffff" />
             </div>
           </div>
         </div>
