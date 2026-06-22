@@ -154,7 +154,8 @@ async function sendTelegram(data: ApplicationNotification) {
     .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
 
   if (delivered === 0) {
-    throw new Error(failures.join('; ') || 'Telegram delivery failed')
+    console.warn('Telegram: no messages delivered', failures)
+    return false
   }
 
   if (failures.length > 0) {
@@ -169,7 +170,6 @@ async function sendEmail(data: ApplicationNotification) {
   const to = process.env.NOTIFY_EMAIL?.trim() || 'boukharih262@gmail.com'
 
   if (!apiKey) {
-    console.warn('Email notification skipped: set RESEND_API_KEY')
     return false
   }
 
