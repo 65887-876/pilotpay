@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { deleteSession } from '../server/db.js'
-import { getBearer, handleOptions, requireAuth } from '../server/api-helpers.js'
+import { deleteSession } from '../../server/db.js'
+import { getBearer, handleOptions, requireAuth } from '../../server/api-helpers.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return

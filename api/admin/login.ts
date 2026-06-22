@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createSession } from '../server/db.js'
-import { handleOptions, parseBody } from '../server/api-helpers.js'
+import { createSession } from '../../server/db.js'
+import { handleOptions, parseBody } from '../../server/api-helpers.js'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'pilotpay-admin'
 
