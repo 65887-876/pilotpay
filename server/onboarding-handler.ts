@@ -67,7 +67,7 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
   if (!stored && !delivered) {
     const { telegram, email } = notificationsConfigured()
     const hints: string[] = []
-    if (!telegram) hints.push('TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID')
+    if (!telegram) hints.push('TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_IDS')
     if (!email) hints.push('RESEND_API_KEY')
 
     return {

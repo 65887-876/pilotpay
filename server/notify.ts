@@ -101,27 +101,64 @@ export function formatApplicationHtml(data: ApplicationNotification) {
   </body></html>`
 }
 
-async function sendTelegram(data: ApplicationNotification) {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim()
+function getTelegramChatIds() {
+  const ids = new Set<string>()
 
-  if (!token || !chatId) {
-    console.warn('Telegram notification skipped: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID')
-    return false
+  const addFromList = (value?: string) => {
+    if (!value?.trim()) return
+    for (const part of value.split(/[,\s]+/)) {
+      const id = part.trim()
+      if (id) ids.add(id)
+    }
   }
 
+  addFromList(process.env.TELEGRAM_CHAT_IDS)
+  addFromList(process.env.TELEGRAM_CHAT_ID)
+  addFromList(process.env.TELEGRAM_CHAT_ID_2)
+
+  return [...ids]
+}
+
+async function sendTelegramToChat(token: string, chatId: string, text: string) {
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: formatApplicationMessage(data),
-    }),
+    body: JSON.stringify({ chat_id: chatId, text }),
   })
 
   if (!res.ok) {
     const detail = await res.text()
-    throw new Error(`Telegram API error (${res.status}): ${detail}`)
+    throw new Error(`Telegram chat ${chatId} (${res.status}): ${detail}`)
+  }
+}
+
+async function sendTelegram(data: ApplicationNotification) {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  const chatIds = getTelegramChatIds()
+
+  if (!token || chatIds.length === 0) {
+    console.warn(
+      'Telegram notification skipped: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS (or TELEGRAM_CHAT_ID)',
+    )
+    return false
+  }
+
+  const text = formatApplicationMessage(data)
+  const results = await Promise.allSettled(
+    chatIds.map((chatId) => sendTelegramToChat(token, chatId, text)),
+  )
+
+  const delivered = results.filter((r) => r.status === 'fulfilled').length
+  const failures = results
+    .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+    .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
+
+  if (delivered === 0) {
+    throw new Error(failures.join('; ') || 'Telegram delivery failed')
+  }
+
+  if (failures.length > 0) {
+    console.warn(`Telegram: sent to ${delivered}/${chatIds.length} chats. Failures:`, failures)
   }
 
   return true
@@ -195,9 +232,12 @@ export async function notifyNewApplication(
 }
 
 export function notificationsConfigured() {
-  const telegram = Boolean(
-    process.env.TELEGRAM_BOT_TOKEN?.trim() && process.env.TELEGRAM_CHAT_ID?.trim(),
-  )
+  const telegram = Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim() && getTelegramChatIds().length > 0)
   const email = Boolean(process.env.RESEND_API_KEY?.trim())
-  return { telegram, email, any: telegram || email }
+  return {
+    telegram,
+    telegramChats: getTelegramChatIds().length,
+    email,
+    any: telegram || email,
+  }
 }
