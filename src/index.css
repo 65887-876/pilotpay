@@ -1,0 +1,320 @@
+@import "tailwindcss";
+
+/* ============================================================
+   PilotPay — Design System
+   Palette: Deep Royal Purple / Dark Navy / Premium Orange /
+            Soft Gray / Off-White. Restrained, enterprise-grade.
+   Type: Inter (body + UI), Inter Tight (display).
+   ============================================================ */
+
+@theme {
+  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Surfaces */
+  --color-bg: #f6f5f3;          /* off-white, warm */
+  --color-bg-raised: #fbfaf9;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1efec;
+
+  /* Ink / text */
+  --color-ink: #14172b;         /* near-navy primary text */
+  --color-ink-soft: #3d4258;
+  --color-muted: #6c7088;       /* soft gray text */
+  --color-faint: #9a9eb3;
+
+  /* Brand */
+  --color-primary: #4322a5;     /* deep royal purple */
+  --color-primary-strong: #361c87;
+  --color-primary-soft: #efeafc;
+  --color-navy: #0e1230;        /* dark navy */
+  --color-navy-soft: #1b2150;
+  --color-accent: #e8612c;      /* premium orange */
+  --color-accent-strong: #cf501f;
+  --color-accent-soft: #fcefe7;
+
+  /* Lines */
+  --color-border: #e6e3dd;
+  --color-border-strong: #d8d4cc;
+
+  /* Easing */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  overflow-x: hidden;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Tabular figures for all metrics/counters */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Focus — visible, on-brand, keyboard-only */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  color: var(--color-ink);
+}
+
+/* ============================================================
+   Background treatments — fine, architectural. No blobs.
+   ============================================================ */
+
+/* Hairline grid, barely-there */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(20, 23, 43, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20, 23, 43, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.bg-grid-fade {
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* Fine dotted field for dark sections */
+.bg-dot-dark {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Subtle section divider rule */
+.rule-top {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Soft elevated card shadow — layered, not a single heavy drop */
+.shadow-card {
+  box-shadow:
+    0 1px 1px rgba(20, 23, 43, 0.04),
+    0 4px 12px -2px rgba(20, 23, 43, 0.06),
+    0 16px 40px -8px rgba(20, 23, 43, 0.06);
+}
+
+.shadow-card-lift {
+  box-shadow:
+    0 1px 1px rgba(20, 23, 43, 0.05),
+    0 8px 24px -4px rgba(20, 23, 43, 0.1),
+    0 28px 64px -12px rgba(67, 34, 165, 0.14);
+}
+
+.shadow-float {
+  box-shadow:
+    0 2px 8px -2px rgba(14, 18, 48, 0.12),
+    0 24px 60px -12px rgba(14, 18, 48, 0.22);
+}
+
+/* Gradient text — restrained, brand-locked */
+.text-brand-gradient {
+  background-image: linear-gradient(120deg, var(--color-primary) 0%, #6a3fd6 45%, var(--color-accent) 110%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================
+   Marquee
+   ============================================================ */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-left 48s linear infinite;
+}
+.marquee-track-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 54s linear infinite;
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-pause:hover .marquee-track,
+.marquee-pause:hover .marquee-track-reverse {
+  animation-play-state: paused;
+}
+
+/* ============================================================
+   Vertical scrolling columns (problem section)
+   ============================================================ */
+@keyframes scroll-up {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+.scroll-column { animation: scroll-up 22s linear infinite; }
+.scroll-column-slow { animation: scroll-up 30s linear infinite; }
+.scroll-column-fast { animation: scroll-up 17s linear infinite; }
+
+/* ============================================================
+   3D scene primitives (hero) — CSS perspective, GPU-only
+   ============================================================ */
+.scene-3d {
+  perspective: 1600px;
+  perspective-origin: 50% 40%;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+.glass-dark {
+  background: rgba(20, 24, 52, 0.55);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+/* Animated dashed flow path (how-it-works / hero network) */
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.flow-line {
+  stroke-dasharray: 6 6;
+  animation: dash-flow 1s linear infinite;
+}
+
+/* Sheen sweep for premium cards */
+@keyframes sheen {
+  0% { transform: translateX(-120%) skewX(-12deg); }
+  100% { transform: translateX(220%) skewX(-12deg); }
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.45) 50%, transparent 80%);
+  transform: translateX(-120%) skewX(-12deg);
+  pointer-events: none;
+}
+.sheen:hover::after {
+  animation: sheen 0.9s var(--ease-out-quint);
+}
+
+/* International phone input (apply form — dark theme) */
+.pp-phone-input {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pp-phone-input:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(67, 34, 165, 0.25);
+}
+
+.pp-phone-input--error {
+  border-color: rgba(255, 120, 80, 0.55);
+}
+
+.pp-phone-input .PhoneInputCountry {
+  margin-right: 0.125rem;
+}
+
+.pp-phone-input .PhoneInputCountrySelect {
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.pp-phone-input .PhoneInputCountrySelect option {
+  color: #14172b;
+  background: #fff;
+}
+
+.pp-phone-input .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.pp-phone-input .PhoneInputCountryIcon--border {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.pp-phone-input .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.pp-phone-input .PhoneInputInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================
+   Reduced motion — honor the OS setting everywhere
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track,
+  .marquee-track-reverse,
+  .scroll-column,
+  .scroll-column-slow,
+  .scroll-column-fast {
+    animation: none !important;
+  }
+}
