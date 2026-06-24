@@ -122,6 +122,7 @@ export function Apply() {
     void submitApplication(payload)
 
     setSubmitting(false)
+    trackFormSubmit()
     setScreen('success')
   }
 
@@ -164,6 +165,7 @@ export function Apply() {
                         <input
                           autoFocus
                           value={data.fullName}
+                          onFocus={touchForm}
                           onChange={(e) => update('fullName', e.target.value)}
                           placeholder="Enter your full name"
                           className={inputClass}
@@ -193,6 +195,7 @@ export function Apply() {
                         <input
                           type="email"
                           value={data.emailAddress}
+                          onFocus={touchForm}
                           onChange={(e) => update('emailAddress', e.target.value)}
                           placeholder="you@example.com"
                           className={inputClass}
