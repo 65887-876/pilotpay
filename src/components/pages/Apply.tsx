@@ -15,6 +15,7 @@ import {
 } from '../apply/applyConfig'
 import { ease } from '../../lib/motion'
 import { submitApplication } from '../../lib/submitApplication'
+import { trackFormFirstInteraction, trackFormSubmit } from '../../lib/metaPixel'
 import { site } from '../../lib/site'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import type { Country } from 'react-phone-number-input'
@@ -51,7 +52,14 @@ export function Apply() {
     }
   }, [])
 
+  useEffect(() => {
+    if (screen === 'success') trackFormSubmit()
+  }, [screen])
+
+  const touchForm = () => trackFormFirstInteraction()
+
   const update = <K extends keyof ApplyFormData>(key: K, value: ApplyFormData[K]) => {
+    touchForm()
     setData((d) => ({ ...d, [key]: value }))
     setErrors((e) => {
       const next = { ...e }
@@ -87,6 +95,7 @@ export function Apply() {
   }
 
   const handleNext = async () => {
+    touchForm()
     if (!validateStep()) return
 
     if (step < TOTAL_STEPS) {
@@ -143,7 +152,7 @@ export function Apply() {
               </p>
             </div>
 
-            <div className="mt-8 flex-1">
+            <div className="mt-8 flex-1" onFocusCapture={touchForm}>
               <AnimatePresence mode="wait">
                 <motion.div key={step} {...stepMotion} transition={{ duration: 0.35, ease }}>
                   {step === 1 && (

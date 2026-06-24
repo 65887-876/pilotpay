@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_CONTACT_PHONE_UK: string
   readonly VITE_CONTACT_PHONE_US: string
   readonly VITE_WHATSAPP_URL: string
+  readonly VITE_META_PIXEL_ID: string
 }
 
 interface ImportMeta {

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { ScrollToHash } from './components/ui/ScrollToHash'
+import { MetaPixel } from './components/MetaPixel'
 import { AdminGuard } from './components/pages/admin/AdminGuard'
 import App from './App.tsx'
 
@@ -36,6 +37,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
+        <MetaPixel />
         <ScrollToHash />
         <Suspense fallback={<PageLoader />}>
           <Routes>
