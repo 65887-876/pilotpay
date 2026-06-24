@@ -52,18 +52,23 @@ function injectMetaPixelScript() {
 export function initMetaPixel() {
   if (initialized || !PIXEL_ID || typeof window === 'undefined') return
 
+  if (getFbq()) {
+    initialized = true
+    return
+  }
+
   injectMetaPixelScript()
   getFbq()?.('init', PIXEL_ID)
   initialized = true
 }
 
 export function trackPageView() {
-  if (!initialized) initMetaPixel()
+  initMetaPixel()
   getFbq()?.('track', 'PageView')
 }
 
 function trackCustom(eventName: string) {
-  if (!initialized) initMetaPixel()
+  initMetaPixel()
   getFbq()?.('trackCustom', eventName)
 }
 
@@ -76,7 +81,7 @@ export function trackFormFirstInteraction() {
 }
 
 export function trackFormSubmit() {
-  if (!initialized) initMetaPixel()
+  initMetaPixel()
   const fbq = getFbq()
   if (!fbq) return
 
