@@ -52,10 +52,6 @@ export function Apply() {
     }
   }, [])
 
-  useEffect(() => {
-    if (screen === 'success') trackFormSubmit()
-  }, [screen])
-
   const touchForm = () => trackFormFirstInteraction()
 
   const update = <K extends keyof ApplyFormData>(key: K, value: ApplyFormData[K]) => {
@@ -121,8 +117,8 @@ export function Apply() {
 
     void submitApplication(payload)
 
-    setSubmitting(false)
     trackFormSubmit()
+    setSubmitting(false)
     setScreen('success')
   }
 
@@ -366,6 +362,10 @@ const inputClass =
   'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-primary focus:ring-2 focus:ring-primary/25'
 
 function SuccessScreen() {
+  useEffect(() => {
+    trackFormSubmit()
+  }, [])
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
