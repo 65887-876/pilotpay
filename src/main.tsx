@@ -9,6 +9,9 @@ import { AdminGuard } from './components/pages/admin/AdminGuard'
 import App from './App.tsx'
 
 const Apply = lazy(() => import('./components/pages/Apply.tsx').then((m) => ({ default: m.Apply })))
+const ThankYou = lazy(() =>
+  import('./components/pages/ThankYou.tsx').then((m) => ({ default: m.ThankYou })),
+)
 const Legal = lazy(() => import('./components/pages/Legal.tsx').then((m) => ({ default: m.Legal })))
 const NotFound = lazy(() =>
   import('./components/pages/NotFound.tsx').then((m) => ({ default: m.NotFound })),
@@ -43,6 +46,7 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/apply" element={<Apply />} />
+            <Route path="/thankyou" element={<ThankYou />} />
             <Route path="/legal/:slug" element={<Legal />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard />}>

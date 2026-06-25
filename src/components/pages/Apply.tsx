@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Logo } from '../brand/Logo'
 import { OptionCard } from '../apply/OptionCard'
 import { PhoneInput } from '../apply/PhoneInput'
@@ -15,12 +15,10 @@ import {
 } from '../apply/applyConfig'
 import { ease } from '../../lib/motion'
 import { submitApplication } from '../../lib/submitApplication'
-import { trackFormFirstInteraction, trackFormSubmit } from '../../lib/metaPixel'
+import { trackFormFirstInteraction } from '../../lib/metaPixel'
 import { site } from '../../lib/site'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import type { Country } from 'react-phone-number-input'
-
-type Screen = 'form' | 'success'
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -39,11 +37,11 @@ const stepMotion = {
 }
 
 export function Apply() {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [data, setData] = useState<ApplyFormData>(initialApplyData)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
-  const [screen, setScreen] = useState<Screen>('form')
 
   useEffect(() => {
     document.title = 'Check Your Eligibility | PilotPay'
@@ -117,9 +115,8 @@ export function Apply() {
 
     void submitApplication(payload)
 
-    trackFormSubmit()
     setSubmitting(false)
-    setScreen('success')
+    navigate('/thankyou', { replace: true })
   }
 
   const progress = (step / TOTAL_STEPS) * 100
@@ -134,25 +131,23 @@ export function Apply() {
           <Logo tone="inverse" wordTone="inverse" size={32} />
         </Link>
 
-        {screen === 'form' ? (
-          <>
-            <div className="mt-10">
-              <div className="h-1 overflow-hidden rounded-full bg-white/10">
-                <motion.div
-                  className="h-full rounded-full bg-primary"
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.45, ease }}
-                />
-              </div>
-              <p className="mt-3 font-display text-sm font-semibold text-primary">
-                Step {step} of {TOTAL_STEPS}
-              </p>
-            </div>
+        <div className="mt-10">
+          <div className="h-1 overflow-hidden rounded-full bg-white/10">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.45, ease }}
+            />
+          </div>
+          <p className="mt-3 font-display text-sm font-semibold text-primary">
+            Step {step} of {TOTAL_STEPS}
+          </p>
+        </div>
 
-            <div className="mt-8 flex-1" onFocusCapture={touchForm}>
-              <AnimatePresence mode="wait">
-                <motion.div key={step} {...stepMotion} transition={{ duration: 0.35, ease }}>
-                  {step === 1 && (
+        <div className="mt-8 flex-1" onFocusCapture={touchForm}>
+          <AnimatePresence mode="wait">
+            <motion.div key={step} {...stepMotion} transition={{ duration: 0.35, ease }}>
+              {step === 1 && (
                     <StepShell
                       title="What is your full legal name?"
                       description="Please provide your billing name for the account."
@@ -265,45 +260,41 @@ export function Apply() {
                       </p>
                     </StepShell>
                   )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-            <div className="mt-10 space-y-4">
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={submitting}
-                className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-strong active:scale-[0.98] disabled:opacity-60 cursor-pointer border-0"
-              >
-                {submitting ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin" />
-                    Submitting...
-                  </span>
-                ) : step === TOTAL_STEPS ? (
-                  'Complete Application'
-                ) : step === 1 ? (
-                  'Next Step'
-                ) : (
-                  'Next'
-                )}
-              </button>
+        <div className="mt-10 space-y-4">
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={submitting}
+            className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-strong active:scale-[0.98] disabled:opacity-60 cursor-pointer border-0"
+          >
+            {submitting ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Submitting...
+              </span>
+            ) : step === TOTAL_STEPS ? (
+              'Complete Application'
+            ) : step === 1 ? (
+              'Next Step'
+            ) : (
+              'Next'
+            )}
+          </button>
 
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="w-full py-2 text-sm font-medium text-white/50 transition-colors hover:text-white/80 cursor-pointer border-0 bg-transparent"
-                >
-                  Go Back
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          <SuccessScreen />
-        )}
+          {step > 1 && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="w-full py-2 text-sm font-medium text-white/50 transition-colors hover:text-white/80 cursor-pointer border-0 bg-transparent"
+            >
+              Go Back
+            </button>
+          )}
+        </div>
 
         <footer className="mt-auto pt-12 text-center">
           <p className="text-xs leading-relaxed text-white/40">
@@ -360,33 +351,3 @@ function Field({
 
 const inputClass =
   'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-primary focus:ring-2 focus:ring-primary/25'
-
-function SuccessScreen() {
-  useEffect(() => {
-    trackFormSubmit()
-  }, [])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease }}
-      className="mt-12 text-center"
-    >
-      <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/15 text-primary">
-        <Check size={40} strokeWidth={2.5} />
-      </span>
-      <h1 className="mt-6 font-display text-3xl font-semibold">Application Received</h1>
-      <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/55">
-        Our team will reach out within 2 hours to guide you through manual Stripe onboarding.
-        Check your inbox for next steps.
-      </p>
-      <Link
-        to="/"
-        className="mt-8 inline-block w-full rounded-full bg-primary py-4 text-center text-base font-bold text-white transition-colors hover:bg-primary-strong"
-      >
-        Back to Home
-      </Link>
-    </motion.div>
-  )
-}
