@@ -12,6 +12,9 @@ const Apply = lazy(() => import('./components/pages/Apply.tsx').then((m) => ({ d
 const ThankYou = lazy(() =>
   import('./components/pages/ThankYou.tsx').then((m) => ({ default: m.ThankYou })),
 )
+const NotEligible = lazy(() =>
+  import('./components/pages/NotEligible.tsx').then((m) => ({ default: m.NotEligible })),
+)
 const Legal = lazy(() => import('./components/pages/Legal.tsx').then((m) => ({ default: m.Legal })))
 const NotFound = lazy(() =>
   import('./components/pages/NotFound.tsx').then((m) => ({ default: m.NotFound })),
@@ -47,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<App />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/thankyou" element={<ThankYou />} />
+            <Route path="/not-eligible" element={<NotEligible />} />
             <Route path="/legal/:slug" element={<Legal />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard />}>

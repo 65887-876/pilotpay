@@ -107,6 +107,12 @@ export function Apply() {
   async function submitForm() {
     setSubmitting(true)
 
+    if (data.totalProcessed === 'brand_new') {
+      setSubmitting(false)
+      navigate('/not-eligible', { replace: true })
+      return
+    }
+
     const payload = {
       ...data,
       telegramUsername: normalizeTelegram(data.telegramUsername),

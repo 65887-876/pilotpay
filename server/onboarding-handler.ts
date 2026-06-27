@@ -20,10 +20,21 @@ export function validateOnboardingBody(body: OnboardingBody) {
   return null
 }
 
+export function isIneligibleApplication(body: OnboardingBody) {
+  return body.totalProcessed === 'brand_new'
+}
+
 export async function processOnboardingSubmit(body: OnboardingBody) {
   const validationError = validateOnboardingBody(body)
   if (validationError) {
     return { status: 400 as const, body: { message: validationError } }
+  }
+
+  if (isIneligibleApplication(body)) {
+    return {
+      status: 200 as const,
+      body: { ok: true, rejected: true as const },
+    }
   }
 
   const payload = {
