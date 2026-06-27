@@ -1,5 +1,6 @@
 const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID?.trim() || '731284423344135'
 const FORM_INTERACTION_KEY = 'pilotpay_form_first_interaction'
+const FORM_SUBMIT_KEY = 'pilotpay_form_submitted'
 
 declare global {
   interface Window {
@@ -22,31 +23,23 @@ export function trackPageView() {
   fireFbq('track', 'PageView')
 }
 
-function fireWithRetry(fn: () => void) {
-  fn()
-  window.setTimeout(fn, 300)
-  window.setTimeout(fn, 1500)
-}
-
 export function trackFormFirstInteraction() {
   if (typeof window === 'undefined') return
   if (sessionStorage.getItem(FORM_INTERACTION_KEY)) return
 
   sessionStorage.setItem(FORM_INTERACTION_KEY, '1')
-  fireWithRetry(() => {
-    fireFbq('trackCustom', 'formfirstinteraction')
-    fireFbq('track', 'InitiateCheckout')
-  })
+  fireFbq('trackCustom', 'formfirstinteraction')
+  fireFbq('track', 'InitiateCheckout')
 }
 
+/** One Lead per form submission — deduped for React StrictMode and retries. */
 export function trackFormSubmit() {
   if (typeof window === 'undefined') return
+  if (sessionStorage.getItem(FORM_SUBMIT_KEY)) return
 
-  fireWithRetry(() => {
-    fireFbq('track', 'Lead')
-    fireFbq('track', 'SubmitApplication')
-    fireFbq('trackCustom', 'formsubmit')
-  })
+  sessionStorage.setItem(FORM_SUBMIT_KEY, '1')
+  fireFbq('track', 'Lead')
+  fireFbq('trackCustom', 'formsubmit')
 }
 
 export function getMetaPixelId() {
