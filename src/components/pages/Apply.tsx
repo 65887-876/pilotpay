@@ -107,7 +107,7 @@ export function Apply() {
   async function submitForm() {
     setSubmitting(true)
 
-    if (data.totalProcessed === 'brand_new') {
+    if (data.totalProcessed === 'brand_new' || data.totalProcessed === 'under_10k') {
       setSubmitting(false)
       navigate('/not-eligible', { replace: true })
       return

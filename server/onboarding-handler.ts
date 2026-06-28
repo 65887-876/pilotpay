@@ -20,8 +20,12 @@ export function validateOnboardingBody(body: OnboardingBody) {
   return null
 }
 
+// Applicants processing under $10k/month are ineligible: their application is
+// rejected outright — never stored, and no email/Telegram notification is sent.
+const INELIGIBLE_VOLUMES = new Set(['brand_new', 'under_10k'])
+
 export function isIneligibleApplication(body: OnboardingBody) {
-  return body.totalProcessed === 'brand_new'
+  return INELIGIBLE_VOLUMES.has(body.totalProcessed ?? '')
 }
 
 export async function processOnboardingSubmit(body: OnboardingBody) {
