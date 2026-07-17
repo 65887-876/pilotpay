@@ -107,11 +107,7 @@ export function Apply() {
   async function submitForm() {
     setSubmitting(true)
 
-    if (
-      data.totalProcessed === 'brand_new' ||
-      data.totalProcessed === 'under_10k' ||
-      data.totalProcessed === 'under_25k'
-    ) {
+    if (data.totalProcessed === 'under_10k' || data.totalProcessed === 'under_25k') {
       setSubmitting(false)
       navigate('/not-eligible', { replace: true })
       return
@@ -223,7 +219,6 @@ export function Apply() {
                           <OptionCard
                             key={v.value}
                             label={v.label}
-                            description={v.description}
                             selected={data.totalProcessed === v.value}
                             onSelect={() => update('totalProcessed', v.value)}
                           />

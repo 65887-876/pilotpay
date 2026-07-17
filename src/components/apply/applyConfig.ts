@@ -1,5 +1,4 @@
 export type TotalProcessed =
-  | 'brand_new'
   | 'under_10k'
   | 'under_25k'
   | '25k_50k'
@@ -25,16 +24,15 @@ export const initialApplyData: ApplyFormData = {
   phoneCountry: 'GB',
   emailAddress: '',
   telegramUsername: '',
-  totalProcessed: 'brand_new',
+  totalProcessed: 'under_25k',
   instantPayouts: 'yes',
   legalEntity: 'uk_ltd',
 }
 
 export const TOTAL_STEPS = 5
 
-export const volumeOptions: { value: TotalProcessed; label: string; description?: string }[] = [
-  { value: 'brand_new', label: '$0 (Brand New)' },
-  { value: 'under_25k', label: 'Under 25,000', description: 'C’est pas possible' },
+export const volumeOptions: { value: TotalProcessed; label: string }[] = [
+  { value: 'under_25k', label: 'Under 25,000' },
   { value: '25k_50k', label: '25,000 - 50,000' },
   { value: '50k_100k', label: '50,000 - 100,000' },
   { value: '100k_plus', label: '100,000+' },
