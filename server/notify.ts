@@ -12,10 +12,11 @@ export type ApplicationNotification = {
 
 const VOLUME_LABELS: Record<string, string> = {
   brand_new: '$0 (Brand New)',
-  under_10k: 'Under $10,000',
-  '10k_50k': '$10,000 - $50,000',
-  '10k_100k': '$50,000 - $100,000',
-  '100k_plus': '$100,000+',
+  under_10k: 'Under 25,000',
+  under_25k: 'Under 25,000',
+  '25k_50k': '25,000 - 50,000',
+  '50k_100k': '50,000 - 100,000',
+  '100k_plus': '100,000+',
 }
 
 const PAYOUT_LABELS: Record<string, string> = {
