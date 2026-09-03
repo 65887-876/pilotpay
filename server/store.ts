@@ -44,10 +44,40 @@ export type DbSchema = {
 }
 
 export class StorageError extends Error {
-  constructor(message: string) {
-    super(message)
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options)
     this.name = 'StorageError'
   }
+}
+
+function isStorageFailure(err: unknown) {
+  if (err instanceof StorageError) return true
+  if (!(err instanceof Error)) return false
+
+  const message = err.message.toLowerCase()
+  const cause = err.cause
+  const causeCode =
+    cause && typeof cause === 'object' && 'code' in cause
+      ? String((cause as { code?: string }).code ?? '')
+      : ''
+
+  return (
+    message.includes('fetch failed') ||
+    message.includes('enotfound') ||
+    message.includes('econnrefused') ||
+    message.includes('etimedout') ||
+    message.includes('network') ||
+    causeCode === 'ENOTFOUND' ||
+    causeCode === 'ECONNREFUSED' ||
+    causeCode === 'ETIMEDOUT'
+  )
+}
+
+function wrapStorageError(action: string, err: unknown): never {
+  if (err instanceof StorageError) throw err
+
+  const detail = err instanceof Error ? err.message : String(err)
+  throw new StorageError(`Redis ${action} failed: ${detail}`, { cause: err })
 }
 
 function isVercel() {
@@ -138,9 +168,13 @@ export async function readStore(): Promise<DbSchema> {
   assertWritableStorage()
 
   if (useRemoteStore()) {
-    const redis = getRedis()
-    const data = await redis.get<DbSchema>(DB_KEY)
-    return data ?? { applications: [], admin_sessions: [] }
+    try {
+      const redis = getRedis()
+      const data = await redis.get<DbSchema>(DB_KEY)
+      return data ?? { applications: [], admin_sessions: [] }
+    } catch (err) {
+      wrapStorageError('read', err)
+    }
   }
 
   return loadFromFile()
@@ -150,20 +184,49 @@ export async function writeStore(db: DbSchema): Promise<void> {
   assertWritableStorage()
 
   if (useRemoteStore()) {
-    const redis = getRedis()
-    await redis.set(DB_KEY, db)
-    return
+    try {
+      const redis = getRedis()
+      await redis.set(DB_KEY, db)
+      return
+    } catch (err) {
+      wrapStorageError('write', err)
+    }
   }
 
   saveToFile(db)
 }
 
+export async function pingRemoteStore() {
+  if (!useRemoteStore()) return { ok: true as const, remote: false as const }
+
+  try {
+    const redis = getRedis()
+    await redis.ping()
+    return { ok: true as const, remote: true as const }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false as const, remote: true as const, error: message }
+  }
+}
+
 export function getStorageStatus() {
   const creds = redisCredentials()
+  let redisHost: string | null = null
+  if (creds?.url) {
+    try {
+      redisHost = new URL(creds.url).hostname
+    } catch {
+      redisHost = null
+    }
+  }
+
   return {
     vercel: isVercel(),
     remote: useRemoteStore(),
     redisUrlSet: Boolean(creds?.url),
     redisTokenSet: Boolean(creds?.token),
+    redisHost,
   }
 }
+
+export { isStorageFailure }

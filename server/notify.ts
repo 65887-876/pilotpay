@@ -8,6 +8,24 @@ export type ApplicationNotification = {
   totalProcessed?: string
   instantPayouts?: string
   legalEntity?: string
+  ineligible?: boolean
+}
+
+function stripQuotes(value: string) {
+  const trimmed = value.trim()
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim()
+  }
+  return trimmed
+}
+
+function getTelegramToken() {
+  const raw = process.env.TELEGRAM_BOT_TOKEN
+  if (!raw?.trim()) return ''
+  return stripQuotes(raw).replace(/^bot/i, '')
 }
 
 const VOLUME_LABELS: Record<string, string> = {
@@ -52,7 +70,9 @@ export function formatApplicationMessage(data: ApplicationNotification) {
     : '—'
 
   const lines = [
-    '🆕 New PilotPay application',
+    data.ineligible
+      ? '⚠️ Ineligible PilotPay application (volume under 25k)'
+      : '🆕 New PilotPay application',
     '',
     `Name: ${data.fullName}`,
     `Email: ${data.emailAddress}`,
@@ -96,8 +116,12 @@ export function formatApplicationHtml(data: ApplicationNotification) {
     )
     .join('')
 
+  const heading = data.ineligible
+    ? 'Ineligible PilotPay application'
+    : 'New PilotPay application'
+
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#111">
-    <h2 style="margin:0 0 16px">New PilotPay application</h2>
+    <h2 style="margin:0 0 16px">${heading}</h2>
     <table style="border-collapse:collapse;width:100%;max-width:560px">${body}</table>
   </body></html>`
 }
@@ -108,7 +132,7 @@ function getTelegramChatIds() {
   const addFromList = (value?: string) => {
     if (!value?.trim()) return
     for (const part of value.split(/[,\s]+/)) {
-      const id = part.trim()
+      const id = stripQuotes(part)
       if (id) ids.add(id)
     }
   }
@@ -121,10 +145,15 @@ function getTelegramChatIds() {
 }
 
 async function sendTelegramToChat(token: string, chatId: string, text: string) {
+  const numericId = /^-?\d+$/.test(chatId) ? Number(chatId) : chatId
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text }),
+    body: JSON.stringify({
+      chat_id: Number.isSafeInteger(numericId) ? numericId : chatId,
+      text,
+      disable_web_page_preview: true,
+    }),
   })
 
   if (!res.ok) {
@@ -134,7 +163,7 @@ async function sendTelegramToChat(token: string, chatId: string, text: string) {
 }
 
 async function sendTelegram(data: ApplicationNotification) {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  const token = getTelegramToken()
   const chatIds = getTelegramChatIds()
 
   if (!token || chatIds.length === 0) {
@@ -224,7 +253,7 @@ async function sendEmail(data: ApplicationNotification) {
     body: JSON.stringify({
       from,
       to,
-      subject: `New PilotPay application — ${data.fullName}`,
+      subject: `${data.ineligible ? 'Ineligible' : 'New'} PilotPay application — ${data.fullName}`,
       text: formatApplicationMessage(data),
       html: formatApplicationHtml(data),
     }),
@@ -273,7 +302,7 @@ export async function notifyNewApplication(
 }
 
 export function notificationsConfigured() {
-  const telegram = Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim() && getTelegramChatIds().length > 0)
+  const telegram = Boolean(getTelegramToken() && getTelegramChatIds().length > 0)
   const email = Boolean(process.env.RESEND_API_KEY?.trim())
   return {
     telegram,

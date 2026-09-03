@@ -1,6 +1,6 @@
 import { insertApplication } from './db.js'
 import { notifyNewApplication } from './notify.js'
-import { StorageError } from './store.js'
+import { isStorageFailure } from './store.js'
 
 export type OnboardingBody = {
   fullName?: string
@@ -20,8 +20,8 @@ export function validateOnboardingBody(body: OnboardingBody) {
   return null
 }
 
-// Applicants processing under 25k/month are ineligible: their application is
-// rejected outright — never stored, and no email/Telegram notification is sent.
+// Applicants processing under 25k/month are ineligible: never stored, but
+// email/Telegram still fire so the team sees every form submit.
 const INELIGIBLE_VOLUMES = new Set(['brand_new', 'under_10k', 'under_25k'])
 
 export function isIneligibleApplication(body: OnboardingBody) {
@@ -35,6 +35,26 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
   }
 
   if (isIneligibleApplication(body)) {
+    const notifications = await notifyNewApplication({
+      fullName: body.fullName!,
+      phoneNumber: body.phoneNumber,
+      phoneCountry: body.phoneCountry,
+      telegramUsername: body.telegramUsername,
+      emailAddress: body.emailAddress!,
+      totalProcessed: body.totalProcessed,
+      instantPayouts: body.instantPayouts,
+      legalEntity: body.legalEntity,
+      ineligible: true,
+    })
+
+    if (!notifications.telegram && !notifications.email) {
+      console.warn('Ineligible application submitted but no notification delivered', {
+        telegram: notifications.telegram,
+        email: notifications.email,
+        errors: notifications.errors,
+      })
+    }
+
     return {
       status: 200 as const,
       body: { ok: true, rejected: true as const },
@@ -53,20 +73,8 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
     onboardingPreference: 'manual' as const,
   }
 
-  let applicationId: string | undefined
-  let stored = false
-
-  try {
-    const application = await insertApplication(payload)
-    applicationId = application.id
-    stored = true
-  } catch (err) {
-    if (!(err instanceof StorageError)) throw err
-    console.warn('Application storage unavailable:', err.message)
-  }
-
+  // Notify first — Redis/storage outages must not block Telegram/email.
   const notifications = await notifyNewApplication({
-    id: applicationId,
     fullName: payload.fullName,
     phoneNumber: payload.phoneNumber,
     phoneCountry: payload.phoneCountry,
@@ -76,6 +84,19 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
     instantPayouts: payload.instantPayouts,
     legalEntity: payload.legalEntity,
   })
+
+  let applicationId: string | undefined
+  let stored = false
+
+  try {
+    const application = await insertApplication(payload)
+    applicationId = application.id
+    stored = true
+  } catch (err) {
+    if (!isStorageFailure(err)) throw err
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn('Application storage unavailable:', message)
+  }
 
   const delivered = notifications.telegram || notifications.email
 

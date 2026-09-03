@@ -13,6 +13,7 @@ export async function submitApplication(payload: ApplicationPayload) {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      keepalive: true,
       body: JSON.stringify({
         source: 'pilotpay-apply',
         submittedAt: new Date().toISOString(),

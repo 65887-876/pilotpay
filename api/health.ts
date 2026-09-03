@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getStorageStatus } from '../server/store.js'
+import { getStorageStatus, pingRemoteStore } from '../server/store.js'
 import { notificationsConfigured } from '../server/notify.js'
 import { handleOptions } from '../server/api-helpers.js'
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return
 
   if (req.method !== 'GET') {
@@ -12,13 +12,14 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const storage = getStorageStatus()
+  const redis = await pingRemoteStore()
   const notifications = notificationsConfigured()
 
   res.json({
     ok: true,
     service: 'pilotpay-api',
-    storage,
+    storage: { ...storage, redis },
     notifications,
-    ready: storage.remote || !storage.vercel || notifications.any,
+    ready: redis.ok || !storage.vercel || notifications.any,
   })
 }

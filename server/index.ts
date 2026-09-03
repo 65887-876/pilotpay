@@ -1,3 +1,4 @@
+import './load-env.js'
 import express from 'express'
 import cors from 'cors'
 import { existsSync } from 'fs'
@@ -14,6 +15,8 @@ import {
   type ApplicationStatus,
 } from './db.js'
 import { processOnboardingSubmit } from './onboarding-handler.js'
+import { notificationsConfigured } from './notify.js'
+import { getStorageStatus, pingRemoteStore } from './store.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 3001
@@ -50,8 +53,17 @@ app.post('/api/onboarding', async (req, res) => {
   }
 })
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'pilotpay-api' })
+app.get('/api/health', async (_req, res) => {
+  const storage = getStorageStatus()
+  const redis = await pingRemoteStore()
+  const notifications = notificationsConfigured()
+  res.json({
+    ok: true,
+    service: 'pilotpay-api',
+    storage: { ...storage, redis },
+    notifications,
+    ready: redis.ok || !storage.vercel || notifications.any,
+  })
 })
 
 app.get('/robots.txt', (_req, res) => {
@@ -152,6 +164,15 @@ if (existsSync(distPath)) {
 }
 
 app.listen(PORT, () => {
+  const notifications = notificationsConfigured()
   console.log(`PilotPay API running on http://localhost:${PORT}`)
+  console.log(
+    `Notifications: telegram=${notifications.telegram} (${notifications.telegramChats} chats), email=${notifications.email}`,
+  )
+  if (!notifications.telegram) {
+    console.warn(
+      'Telegram is not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS in .env — each recipient must open the bot and tap Start.',
+    )
+  }
   if (!isProd) console.log(`Admin password: ${ADMIN_PASSWORD} (set ADMIN_PASSWORD in production)`)
 })

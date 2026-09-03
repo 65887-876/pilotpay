@@ -107,11 +107,8 @@ export function Apply() {
   async function submitForm() {
     setSubmitting(true)
 
-    if (data.totalProcessed === 'under_10k' || data.totalProcessed === 'under_25k') {
-      setSubmitting(false)
-      navigate('/not-eligible', { replace: true })
-      return
-    }
+    const ineligible =
+      data.totalProcessed === 'under_10k' || data.totalProcessed === 'under_25k'
 
     const payload = {
       ...data,
@@ -119,10 +116,10 @@ export function Apply() {
       onboardingPreference: 'manual' as const,
     }
 
-    void submitApplication(payload)
+    await submitApplication(payload)
 
     setSubmitting(false)
-    navigate('/thankyou', { replace: true })
+    navigate(ineligible ? '/not-eligible' : '/thankyou', { replace: true })
   }
 
   const progress = (step / TOTAL_STEPS) * 100
