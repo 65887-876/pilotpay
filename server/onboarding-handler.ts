@@ -20,8 +20,7 @@ export function validateOnboardingBody(body: OnboardingBody) {
   return null
 }
 
-// Applicants processing under 25k/month are ineligible: never stored, but
-// email/Telegram still fire so the team sees every form submit.
+// Applicants processing under 25k/month are ineligible: never stored, no notifications.
 const INELIGIBLE_VOLUMES = new Set(['brand_new', 'under_10k', 'under_25k'])
 
 export function isIneligibleApplication(body: OnboardingBody) {
@@ -35,26 +34,6 @@ export async function processOnboardingSubmit(body: OnboardingBody) {
   }
 
   if (isIneligibleApplication(body)) {
-    const notifications = await notifyNewApplication({
-      fullName: body.fullName!,
-      phoneNumber: body.phoneNumber,
-      phoneCountry: body.phoneCountry,
-      telegramUsername: body.telegramUsername,
-      emailAddress: body.emailAddress!,
-      totalProcessed: body.totalProcessed,
-      instantPayouts: body.instantPayouts,
-      legalEntity: body.legalEntity,
-      ineligible: true,
-    })
-
-    if (!notifications.telegram && !notifications.email) {
-      console.warn('Ineligible application submitted but no notification delivered', {
-        telegram: notifications.telegram,
-        email: notifications.email,
-        errors: notifications.errors,
-      })
-    }
-
     return {
       status: 200 as const,
       body: { ok: true, rejected: true as const },

@@ -110,6 +110,12 @@ export function Apply() {
     const ineligible =
       data.totalProcessed === 'under_10k' || data.totalProcessed === 'under_25k'
 
+    if (ineligible) {
+      setSubmitting(false)
+      navigate('/not-eligible', { replace: true })
+      return
+    }
+
     const payload = {
       ...data,
       telegramUsername: normalizeTelegram(data.telegramUsername),
@@ -119,7 +125,7 @@ export function Apply() {
     await submitApplication(payload)
 
     setSubmitting(false)
-    navigate(ineligible ? '/not-eligible' : '/thankyou', { replace: true })
+    navigate('/thankyou', { replace: true })
   }
 
   const progress = (step / TOTAL_STEPS) * 100
