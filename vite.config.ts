@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     ? `<link rel="canonical" href="${siteUrl}/" />\n    <meta property="og:url" content="${siteUrl}/" />`
     : '<!-- Set VITE_SITE_URL when your domain is purchased for canonical & og:url -->'
 
-  const metaPixelId = env.VITE_META_PIXEL_ID?.trim() || '731284423344135'
+  const metaPixelId = env.VITE_META_PIXEL_ID?.trim() || '1355146316390442'
   const metaPixel = metaPixelId
     ? `<!-- Meta Pixel Code -->
     <script>
