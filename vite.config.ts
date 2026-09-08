@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 const apiPort = process.env.API_PORT ?? '3001'
 
+const META_PIXEL_ID = '1355146316390442'
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const siteUrl = (env.VITE_SITE_URL || env.SITE_URL || '').replace(/\/$/, '')
@@ -13,9 +15,7 @@ export default defineConfig(({ mode }) => {
     ? `<link rel="canonical" href="${siteUrl}/" />\n    <meta property="og:url" content="${siteUrl}/" />`
     : '<!-- Set VITE_SITE_URL when your domain is purchased for canonical & og:url -->'
 
-  const metaPixelId = env.VITE_META_PIXEL_ID?.trim() || '1355146316390442'
-  const metaPixel = metaPixelId
-    ? `<!-- Meta Pixel Code -->
+  const metaPixel = `<!-- Meta Pixel Code -->
     <script>
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -25,13 +25,12 @@ export default defineConfig(({ mode }) => {
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '${metaPixelId}');
+    fbq('init', '${META_PIXEL_ID}');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none" alt=""
-    src="https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1" /></noscript>
+    src="https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1" /></noscript>
     <!-- End Meta Pixel Code -->`
-    : '<!-- Meta Pixel: set VITE_META_PIXEL_ID -->'
 
   return {
     plugins: [
